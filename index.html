@@ -5,32 +5,169 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial;
-  background: linear-gradient(to bottom, #1a0026, #32004d);
+  font-family: Arial, sans-serif;
+  background: linear-gradient(to bottom, #14001f, #32004d, #0d0014);
   color: white;
   text-align: center;
 }
-button {
-  padding: 10px;
-  margin-top: 20px;
-  background: #8000ff;
-  color: white;
-  border: none;
-  cursor: pointer;
+
+header {
+  padding: 20px;
+  font-size: 28px;
+  font-weight: bold;
 }
+
+.section {
+  margin: 20px auto;
+  width: 90%;
+  max-width: 800px;
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+button {
+  padding: 10px 15px;
+  background: #8000ff;
+  border: none;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
 button:hover {
   background: #a64dff;
 }
+
+canvas {
+  background: black;
+  border: 2px solid #8000ff;
+  margin-top: 15px;
+}
+
+input, select {
+  padding: 5px;
+  margin-top: 5px;
+  width: 100%;
+  max-width: 300px;
+}
 </style>
 </head>
+
 <body>
 
-<h1>StickVerse Studio</h1>
-<p>Welcome to my animation platform!</p>
+<header>🔥 StickVerse Studio 🔥</header>
 
-<button onclick="alert('Animation feature coming soon!')">
-Generate Animation
-</button>
+<div class="section">
+<h2>Create Your Character</h2>
+
+<label>Character Color:</label><br>
+<input type="color" id="charColor" value="#00ffff"><br>
+
+<label>Character Speed:</label><br>
+<select id="charSpeed">
+  <option value="2">Normal</option>
+  <option value="4">Fast</option>
+  <option value="1">Slow</option>
+</select><br>
+
+<button onclick="saveCharacter()">Save Character</button>
+<p id="characterSaved"></p>
+</div>
+
+<div class="section">
+<h2>Animation Studio</h2>
+
+<label>How many characters?</label><br>
+<input type="number" id="numChars" value="2" min="1" max="6"><br>
+
+<button onclick="generateAnimation()">Generate Animation</button>
+<button onclick="playAnimation()">Play</button>
+
+<canvas id="animationCanvas" width="700" height="350"></canvas>
+</div>
+
+<script>
+let characters = [];
+let animationData = null;
+let frame = 0;
+let playing = false;
+
+const canvas = document.getElementById("animationCanvas");
+const ctx = canvas.getContext("2d");
+
+function saveCharacter() {
+  const color = document.getElementById("charColor").value;
+  const speed = document.getElementById("charSpeed").value;
+  characters.push({color, speed});
+  document.getElementById("characterSaved").innerText =
+    "Character Saved! Total: " + characters.length;
+}
+
+function generateAnimation() {
+  const num = document.getElementById("numChars").value;
+  animationData = { num };
+  drawFrame();
+}
+
+function drawStick(x, y, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.arc(x, y - 30, 10, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x, y - 20);
+  ctx.lineTo(x, y + 20);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x - 15, y - 5);
+  ctx.lineTo(x + 15, y - 5);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x, y + 20);
+  ctx.lineTo(x - 15, y + 40);
+  ctx.moveTo(x, y + 20);
+  ctx.lineTo(x + 15, y + 40);
+  ctx.stroke();
+}
+
+function drawFrame() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#111";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < animationData.num; i++) {
+    let char = characters[i] || {color: "#ffffff", speed: 2};
+    let offset = Math.sin(frame / (20/char.speed)) * 30;
+    drawStick(100 + i * 100 + offset, 200, char.color);
+  }
+}
+
+function playAnimation() {
+  if (!animationData) return;
+  frame = 0;
+  playing = true;
+  animate();
+}
+
+function animate() {
+  if (!playing) return;
+
+  drawFrame();
+  frame++;
+
+  if (frame < 200) {
+    requestAnimationFrame(animate);
+  } else {
+    playing = false;
+  }
+}
+</script>
 
 </body>
 </html>
