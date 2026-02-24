@@ -2,199 +2,115 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StickVerse Studio - GOD TIER</title>
+<title>Stickverse Studio</title>
 <style>
-  body { margin:0; background: #4B0082; overflow:hidden; font-family: sans-serif; color:white; }
-  #gameCanvas { display:block; margin:0 auto; background: #4B0082; }
-  #ui { position:absolute; top:10px; left:10px; z-index:10; }
-  button { margin:5px; padding:8px; font-weight:bold; background:#6A0DAD; color:white; border:none; border-radius:5px; cursor:pointer;}
-  .characterCard { background: rgba(255,255,255,0.1); padding:5px; margin:5px; border-radius:5px; }
+  body { margin:0; overflow:hidden; background:#111; }
+  canvas { display:block; margin:0 auto; background:#222; }
 </style>
 </head>
 <body>
-<div id="ui">
-  <div>
-    <button onclick="createCharacter()">Create Character</button>
-    <button onclick="startBattle()">Start Battle</button>
-  </div>
-  <div id="characterList"></div>
-</div>
 <canvas id="gameCanvas" width="1200" height="600"></canvas>
 
 <script>
-// --- GAME SETUP ---
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+// ===== Stickverse Studio Engine =====
+// Self-contained HTML version
 
-let characters = [];
-let battlegrounds = ["KJ Arena", "Gojo Domain"];
-let currentBattlefield = 0;
-let powers = [];
-let domains = [];
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-// --- POWERS & DOMAINS (abbreviated example, add all 50) ---
-powers = [
-  {name:"Chrono-Absorption", effect:"rewind/accelerate time", animation:"clockRipple"},
-  {name:"Quantum Perception", effect:"see multiple outcomes", animation:"multiVision"},
-  {name:"Material Transmutation", effect:"change object properties", animation:"glowPattern"},
-  {name:"Tactile Teleportation", effect:"teleport to touched places", animation:"afterImage"},
-  {name:"Force of Will", effect:"manifest mental force", animation:"warpAir"}
-  // Add remaining 45 powers here
+const powers = [
+  { name: "Chrono-Absorption", domain: "The Temporal Rift", look: "glowing clocks aura" },
+  { name: "Quantum Perception", domain: "The Endless Possibilities", look: "multidimensional eyes" },
+  { name: "Material Transmutation", domain: "The Alchemist's Lair", look: "glowing patterns on objects" },
+  { name: "Tactile Teleportation", domain: "The Touching Void", look: "ghostly afterimages" },
+  { name: "Force of Will", domain: "The Unyielding Fortress", look: "environment warp aura" },
+  { name: "Shadow Puppeteering", domain: "The Darkened Theater", look: "living shadow constructs" },
+  { name: "Sonic Mimicry", domain: "The Echoing Abyss", look: "vibrating air ripples" },
+  { name: "Chameleon Skin", domain: "The Camouflage Zone", look: "skin blends with environment" },
+  { name: "Biorhythm Manipulation", domain: "The Pulse Chamber", look: "rhythmic aura pulse" },
+  { name: "Ink Manifestation", domain: "The Living Canvas", look: "swirling inky constructs" },
+  // ...add all 50 powers/domains/looks here
 ];
 
-domains = [
-  {name:"Temporal Rift", power:"Chrono-Absorption", handMove:true},
-  {name:"Endless Possibilities", power:"Quantum Perception", handMove:true},
-  {name:"Alchemist's Lair", power:"Material Transmutation", handMove:true},
-  {name:"Touching Void", power:"Tactile Teleportation", handMove:true},
-  {name:"Unyielding Fortress", power:"Force of Will", handMove:true}
-  // Add remaining 45 domains here
-];
-
-// --- CHARACTER CREATION ---
-function createCharacter() {
-  const name = prompt("Enter Character Name:");
-  if(!name) return;
-
-  const color = prompt("Enter Color (name or hex):","#FFFFFF");
-  const char = {
-    name:name,
-    color:color,
-    power: powers[Math.floor(Math.random()*powers.length)],
-    domain: domains[Math.floor(Math.random()*domains.length)],
-    energy: 0,
-    x: Math.random()*canvas.width*0.8+50,
-    y: Math.random()*canvas.height*0.8+50,
-    size: 40,
-    fused:false
-  };
-  characters.push(char);
-  updateCharacterList();
-}
-
-// --- UI UPDATE ---
-function updateCharacterList() {
-  const div = document.getElementById('characterList');
-  div.innerHTML = "";
-  characters.forEach((c,i)=>{
-    div.innerHTML += `<div class="characterCard">#${i+1}: ${c.name} (${c.power.name})</div>`;
-  });
-}
-
-// --- BATTLE LOGIC ---
-let battleActive = false;
-function startBattle() {
-  if(characters.length<2) { alert("Add at least 2 characters!"); return; }
-  battleActive = true;
-  animate();
-}
-
-// --- SOUND PLACEHOLDER ---
 const sounds = {
-  ultimate: new Audio("https://www.soundjay.com/button/sounds/button-3.mp3"), // replace with your own
-  powerUse: new Audio("https://www.soundjay.com/button/sounds/button-16.mp3"),
+  laser: new Audio("https://freesound.org/data/previews/331/331912_3248244-lq.mp3"),
+  ultimate: new Audio("https://freesound.org/data/previews/82/82818_1022650-lq.mp3"),
+  clash: new Audio("https://freesound.org/data/previews/33/33749_3248244-lq.mp3"),
 };
 
-// --- FUSION ---
-function fuseCharacters(c1,c2) {
-  const fusedChar = {
-    name:c1.name+"-"+c2.name,
-    color:"#FFD700",
-    power:c1.power,
-    domain:c2.domain,
-    energy: c1.energy+c2.energy,
-    x:(c1.x+c2.x)/2,
-    y:(c1.y+c2.y)/2,
-    size: c1.size+c2.size*0.5,
-    fused:true
-  };
-  characters.push(fusedChar);
-  characters = characters.filter(ch=>ch!==c1 && ch!==c2);
-  updateCharacterList();
-}
+class Stickman {
+  constructor(name, x, y) {
+    this.name = name;
+    this.x = x;
+    this.y = y;
+    this.color = "#fff";
+    this.size = 20;
+    this.health = 100;
+    this.power = powers[Math.floor(Math.random()*powers.length)];
+    this.ultimateCharge = 0;
+    this.isUltimate = false;
+    this.fusion = null;
+  }
 
-// --- ANIMATION ---
-function animate() {
-  if(!battleActive) return;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  // Draw battleground
-  ctx.fillStyle="rgba(0,0,0,0.2)";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="white";
-  ctx.font="20px sans-serif";
-  ctx.fillText("Battleground: "+battlegrounds[currentBattlefield],10,580);
-
-  // Draw characters
-  characters.forEach(c=>{
-    ctx.fillStyle=c.color;
+  draw() {
+    ctx.fillStyle = this.color;
     ctx.beginPath();
-    ctx.arc(c.x,c.y,c.size,0,Math.PI*2);
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
     ctx.fill();
-
-    // Draw energy bar above
-    ctx.strokeStyle="yellow";
-    ctx.lineWidth=3;
-    ctx.beginPath();
-    ctx.arc(c.x,c.y- c.size -10, c.size*0.5, 0, Math.PI*2*c.energy/100);
+    ctx.strokeStyle = "#0ff";
     ctx.stroke();
-  });
+  }
 
-  // Random AI moves
-  characters.forEach(c=>{
-    c.x += Math.random()*4-2;
-    c.y += Math.random()*4-2;
-    c.energy = Math.min(c.energy+0.1,100);
+  attack(target) {
+    let hit = Math.random()*20;
+    target.health -= hit;
+    this.ultimateCharge += 5;
+    sounds.laser.play();
+    if(this.ultimateCharge >= 100) this.ultimate(target);
+  }
 
-    if(c.energy>=100){
-      useUltimate(c);
-      c.energy = 0;
-    }
-  });
-
-  requestAnimationFrame(animate);
-}
-
-// --- ULTIMATE ATTACK ---
-function useUltimate(c) {
-  // Play sound
-  sounds.ultimate.play();
-
-  // Slow motion + zoom
-  let originalScale = ctx.getTransform().a;
-  ctx.save();
-  ctx.scale(2,2);
-  ctx.fillStyle=c.color;
-  ctx.beginPath();
-  ctx.arc(c.x/2,c.y/2,c.size*1.5,0,Math.PI*2);
-  ctx.fill();
-  ctx.restore();
-  setTimeout(()=>{},500);
-
-  // Environmental effect placeholder
-  ctx.fillStyle="rgba(255,255,255,0.1)";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-}
-
-// --- DOMAIN CLASHES ---
-function domainClash(c1,c2) {
-  if(c1.domain.handMove && c2.domain.handMove){
-    // simple visual clash
-    ctx.strokeStyle="cyan";
+  ultimate(target) {
+    this.isUltimate = true;
+    this.ultimateCharge = 0;
+    target.health -= 50;
+    sounds.ultimate.play();
+    ctx.fillStyle = "rgba(255,255,0,0.3)";
     ctx.beginPath();
-    ctx.moveTo(c1.x,c1.y);
-    ctx.lineTo(c2.x,c2.y);
-    ctx.stroke();
+    ctx.arc(this.x, this.y, 80, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  fusionWith(other) {
+    this.fusion = other.name;
+    this.color = "#f0f";
+    this.size += 10;
+    this.ultimateCharge = 50;
   }
 }
 
-// --- ADDITIONAL GAME FUNCTIONS ---
-// 1. Add more powers/domains in the arrays
-// 2. Add sound URLs for each effect
-// 3. Add fusion triggers (example: click two characterCards to fuse)
-// 4. Expand battleground list and effects
+// Initialize stickmen
+let stickmen = [
+  new Stickman("KJ", 200, 300),
+  new Stickman("Gojo", 1000, 300)
+];
 
+// Game loop
+function gameLoop() {
+  ctx.clearRect(0,0,canvas.width, canvas.height);
+
+  stickmen.forEach(sm => sm.draw());
+
+  stickmen.forEach(sm => {
+    let target = stickmen[Math.floor(Math.random()*stickmen.length)];
+    if(target!==sm) sm.attack(target);
+  });
+
+  stickmen = stickmen.filter(sm => sm.health > 0);
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
 </script>
 </body>
 </html>
