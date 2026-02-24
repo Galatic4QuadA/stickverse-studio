@@ -1,116 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Stickverse Studio</title>
-<style>
-  body { margin:0; overflow:hidden; background:#111; }
-  canvas { display:block; margin:0 auto; background:#222; }
-</style>
-</head>
-<body>
-<canvas id="gameCanvas" width="1200" height="600"></canvas>
+    const location = document.getElementById('location').value;
+    const winner = document.getElementById('winner').value;
+    const powerLevel = document.getElementById('powerLevel').value;
+    const effects = document.getElementById('effects').value;
+    const mood = document.getElementById('mood').value;
+    const twist = document.getElementById('twist').value;
 
-<script>
-// ===== Stickverse Studio Engine =====
-// Self-contained HTML version
+    // Simple generated script
+    currentScript = {
+        title: document.getElementById('storyInput').value || 'My Stick Figure Fight',
+        characters: Array.from({length:numChars}, (_,i)=>({name:`Character ${i+1}`, color: looks[i%looks.length], abilities: powers.slice(0,3), weapon:null})),
+        scenes: [
+            {desc:'Enter scene', effect:null},
+            {desc:'Fight starts', effect:effects},
+            {desc:'Character 1 attacks', effect:effects},
+            {desc:'Character 2 attacks', effect:effects},
+            {desc:'Finish Move', effect:'slowmo + zoom'},
+            {desc:'Victory Pose', effect:null}
+        ],
+        settings: {fightType, animLength, location, winner, powerLevel, mood, twist},
+        date: new Date().toLocaleString()
+    };
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-const powers = [
-  { name: "Chrono-Absorption", domain: "The Temporal Rift", look: "glowing clocks aura" },
-  { name: "Quantum Perception", domain: "The Endless Possibilities", look: "multidimensional eyes" },
-  { name: "Material Transmutation", domain: "The Alchemist's Lair", look: "glowing patterns on objects" },
-  { name: "Tactile Teleportation", domain: "The Touching Void", look: "ghostly afterimages" },
-  { name: "Force of Will", domain: "The Unyielding Fortress", look: "environment warp aura" },
-  { name: "Shadow Puppeteering", domain: "The Darkened Theater", look: "living shadow constructs" },
-  { name: "Sonic Mimicry", domain: "The Echoing Abyss", look: "vibrating air ripples" },
-  { name: "Chameleon Skin", domain: "The Camouflage Zone", look: "skin blends with environment" },
-  { name: "Biorhythm Manipulation", domain: "The Pulse Chamber", look: "rhythmic aura pulse" },
-  { name: "Ink Manifestation", domain: "The Living Canvas", look: "swirling inky constructs" },
-  // ...add all 50 powers/domains/looks here
-];
-
-const sounds = {
-  laser: new Audio("https://freesound.org/data/previews/331/331912_3248244-lq.mp3"),
-  ultimate: new Audio("https://freesound.org/data/previews/82/82818_1022650-lq.mp3"),
-  clash: new Audio("https://freesound.org/data/previews/33/33749_3248244-lq.mp3"),
-};
-
-class Stickman {
-  constructor(name, x, y) {
-    this.name = name;
-    this.x = x;
-    this.y = y;
-    this.color = "#fff";
-    this.size = 20;
-    this.health = 100;
-    this.power = powers[Math.floor(Math.random()*powers.length)];
-    this.ultimateCharge = 0;
-    this.isUltimate = false;
-    this.fusion = null;
-  }
-
-  draw() {
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle = "#0ff";
-    ctx.stroke();
-  }
-
-  attack(target) {
-    let hit = Math.random()*20;
-    target.health -= hit;
-    this.ultimateCharge += 5;
-    sounds.laser.play();
-    if(this.ultimateCharge >= 100) this.ultimate(target);
-  }
-
-  ultimate(target) {
-    this.isUltimate = true;
-    this.ultimateCharge = 0;
-    target.health -= 50;
-    sounds.ultimate.play();
-    ctx.fillStyle = "rgba(255,255,0,0.3)";
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, 80, 0, Math.PI*2);
-    ctx.fill();
-  }
-
-  fusionWith(other) {
-    this.fusion = other.name;
-    this.color = "#f0f";
-    this.size += 10;
-    this.ultimateCharge = 50;
-  }
+    document.getElementById('questionnaire').style.display='none';
+    document.getElementById('animationViewer').style.display='block';
+    drawAnimationPreview();
 }
 
-// Initialize stickmen
-let stickmen = [
-  new Stickman("KJ", 200, 300),
-  new Stickman("Gojo", 1000, 300)
-];
-
-// Game loop
-function gameLoop() {
-  ctx.clearRect(0,0,canvas.width, canvas.height);
-
-  stickmen.forEach(sm => sm.draw());
-
-  stickmen.forEach(sm => {
-    let target = stickmen[Math.floor(Math.random()*stickmen.length)];
-    if(target!==sm) sm.attack(target);
-  });
-
-  stickmen = stickmen.filter(sm => sm.health > 0);
-
-  requestAnimationFrame(gameLoop);
+// ==== Animation Canvas ====
+const canvas = document.getElementById('animationCanvas');
+const ctx = canvas.getContext('2d');
+function drawAnimationPreview(){
+    ctx.fillStyle='#000';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    currentScript.characters.forEach((c,i)=>{
+        ctx.fillStyle = c.color;
+        ctx.fillRect(100 + i*150, 300, 20, 60); // simple stick figure rectangle
+        ctx.fillRect(105 + i*150, 270, 10, 30); // simple head
+    });
 }
 
-gameLoop();
+function playAnimation(){
+    alert('Animation playing! (placeholder: integrate real frame sequences here)');
+}
+
+// ==== Save & My Projects ====
+function saveAnimation(){
+    animationsDB.push({...currentScript});
+    renderProjectList();
+}
+function renderProjectList(){
+    const listDiv = document.getElementById('projectList');
+    listDiv.innerHTML = '';
+    animationsDB.forEach((proj,i)=>{
+        const div = document.createElement('div');
+        div.className='project-card';
+        div.innerHTML=`<h4>${proj.title}</h4>
+            <button onclick='editProject(${i})'>Edit</button>
+            <button onclick='duplicateProject(${i})'>Duplicate</button>
+            <button onclick='deleteProject(${i})'>Delete</button>
+            <button onclick='remixProject(${i})'>Remix</button>
+        `;
+        listDiv.appendChild(div);
+    });
+}
+function editProject(i){
+    currentScript = {...animationsDB[i]};
+    alert('Edit project: placeholder for AI editing interface');
+}
+function duplicateProject(i){
+    animationsDB.push({...animationsDB[i], title:animationsDB[i].title+' Copy'});
+    renderProjectList();
+}
+function deleteProject(i){
+    animationsDB.splice(i,1);
+    renderProjectList();
+}
+function remixProject(i){
+    const proj = {...animationsDB[i]};
+    proj.title += ' Remix';
+    proj.scenes.reverse(); // simple remix placeholder
+    animationsDB.push(proj);
+    renderProjectList();
+}
 </script>
 </body>
 </html>
