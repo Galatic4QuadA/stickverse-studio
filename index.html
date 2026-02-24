@@ -1,171 +1,276 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>StickVerse Studio</title>
+<title>StickVerse Studio - GOD-TIER</title>
+<meta charset="UTF-8">
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(to bottom, #14001f, #32004d, #0d0014);
-  color: white;
-  text-align: center;
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background: linear-gradient(to bottom, #0d0014,#32004d,#0a0014);
+  color:white;
+  text-align:center;
 }
-
-header {
-  padding: 20px;
-  font-size: 28px;
-  font-weight: bold;
+header{
+  padding:20px;
+  font-size:32px;
+  font-weight:bold;
+  letter-spacing:2px;
 }
-
-.section {
-  margin: 20px auto;
-  width: 90%;
-  max-width: 800px;
+.section{
+  margin:20px auto;
+  width:95%;
+  max-width:1000px;
   background: rgba(255,255,255,0.05);
-  padding: 20px;
-  border-radius: 10px;
+  padding:20px;
+  border-radius:15px;
 }
-
-button {
-  padding: 10px 15px;
-  background: #8000ff;
-  border: none;
-  color: white;
-  cursor: pointer;
-  margin-top: 10px;
+button{
+  padding:10px 15px;
+  margin:5px;
+  background:#8000ff;
+  border:none;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
 }
-
-button:hover {
-  background: #a64dff;
+button:hover{background:#a64dff;}
+canvas{
+  background:black;
+  border:2px solid #8000ff;
+  margin-top:15px;
+  border-radius:10px;
 }
-
-canvas {
-  background: black;
-  border: 2px solid #8000ff;
-  margin-top: 15px;
+input,select{
+  padding:6px;
+  margin:5px;
 }
-
-input, select {
-  padding: 5px;
-  margin-top: 5px;
-  width: 100%;
-  max-width: 300px;
+.playlist-episode{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:5px;
 }
 </style>
 </head>
-
 <body>
 
-<header>🔥 StickVerse Studio 🔥</header>
+<header>🌌 StickVerse Studio - GOD-TIER 🌌</header>
 
 <div class="section">
-<h2>Create Your Character</h2>
-
-<label>Character Color:</label><br>
+<h2>Character Creator</h2>
+<label>Name your character:</label><br>
+<input type="text" id="charName" placeholder="Enter Name"><br>
+<label>Choose color:</label><br>
 <input type="color" id="charColor" value="#00ffff"><br>
-
-<label>Character Speed:</label><br>
+<label>Character speed:</label><br>
 <select id="charSpeed">
   <option value="2">Normal</option>
   <option value="4">Fast</option>
   <option value="1">Slow</option>
 </select><br>
-
 <button onclick="saveCharacter()">Save Character</button>
-<p id="characterSaved"></p>
+<p id="charSaved"></p>
+</div>
+
+<div class="section">
+<h2>Basic Questions</h2>
+<label>Question 1: Animation type?</label><br>
+<select id="basicQ1">
+  <option value="fight">Fight</option>
+  <option value="story">Story</option>
+</select><br>
+<label>Question 2: Scene environment?</label><br>
+<select id="basicQ2">
+  <option value="city">City</option>
+  <option value="forest">Forest</option>
+  <option value="space">Space</option>
+</select><br>
+<label>Question 3: Number of characters?</label><br>
+<input type="number" id="basicQ3" value="2" min="1" max="45"><br>
+<button onclick="nextAdvanced()">Continue to Advanced Questions</button>
+</div>
+
+<div class="section" id="advancedSection" style="display:none;">
+<h2>Advanced Questions</h2>
+<label>Question 4: Dialogue text:</label><br>
+<input type="text" id="advQ1" placeholder="Optional Dialogue"><br>
+<label>Question 5: Background music:</label><br>
+<select id="advQ2">
+  <option value="none">None</option>
+  <option value="epic">Epic</option>
+  <option value="sci-fi">Sci-Fi</option>
+</select><br>
+<label>Question 6: Special effect:</label><br>
+<select id="advQ3">
+  <option value="none">None</option>
+  <option value="slowMo">Slow Motion</option>
+  <option value="cameraZoom">Camera Zoom</option>
+</select><br>
+<button onclick="generateAnimation()">Generate Animation</button>
 </div>
 
 <div class="section">
 <h2>Animation Studio</h2>
-
-<label>How many characters?</label><br>
-<input type="number" id="numChars" value="2" min="1" max="6"><br>
-
-<button onclick="generateAnimation()">Generate Animation</button>
+<canvas id="canvas" width="900" height="450"></canvas><br>
 <button onclick="playAnimation()">Play</button>
+<button onclick="stopAnimation()">Stop</button>
+<button onclick="saveEpisode()">Save Episode</button>
+<button onclick="recordDialogue()">Record Dialogue</button>
+<p id="sceneTitleDisplay"></p>
+</div>
 
-<canvas id="animationCanvas" width="700" height="350"></canvas>
+<div class="section">
+<h2>Playlist</h2>
+<div id="playlist"></div>
 </div>
 
 <script>
-let characters = [];
-let animationData = null;
-let frame = 0;
-let playing = false;
+let characters=[];
+let animationData=null;
+let frame=0;
+let playing=false;
+let slowMo=false;
+let episodes=[];
+let recorder=null;
+let audioChunks=[];
 
-const canvas = document.getElementById("animationCanvas");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
 
-function saveCharacter() {
-  const color = document.getElementById("charColor").value;
-  const speed = document.getElementById("charSpeed").value;
-  characters.push({color, speed});
-  document.getElementById("characterSaved").innerText =
-    "Character Saved! Total: " + characters.length;
+function saveCharacter(){
+  let name=document.getElementById("charName").value||("Character"+(characters.length+1));
+  let color=document.getElementById("charColor").value;
+  let speed=document.getElementById("charSpeed").value;
+  characters.push({name,color,speed});
+  document.getElementById("charSaved").innerText="Saved "+name+"! Total: "+characters.length;
 }
 
-function generateAnimation() {
-  const num = document.getElementById("numChars").value;
-  animationData = { num };
+function nextAdvanced(){
+  document.getElementById("advancedSection").style.display="block";
+}
+
+function generateAnimation(){
+  let numChars=parseInt(document.getElementById("basicQ3").value);
+  if(numChars>45) numChars=45;
+  animationData={
+    type:document.getElementById("basicQ1").value,
+    env:document.getElementById("basicQ2").value,
+    num:numChars,
+    dialogue:document.getElementById("advQ1").value,
+    music:document.getElementById("advQ2").value,
+    effect:document.getElementById("advQ3").value
+  };
+  frame=0;
   drawFrame();
+  document.getElementById("sceneTitleDisplay").innerText="Scene Generated: "+animationData.type;
 }
 
-function drawStick(x, y, color) {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 3;
-
-  ctx.beginPath();
-  ctx.arc(x, y - 30, 10, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(x, y - 20);
-  ctx.lineTo(x, y + 20);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(x - 15, y - 5);
-  ctx.lineTo(x + 15, y - 5);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(x, y + 20);
-  ctx.lineTo(x - 15, y + 40);
-  ctx.moveTo(x, y + 20);
-  ctx.lineTo(x + 15, y + 40);
-  ctx.stroke();
-}
-
-function drawFrame() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#111";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 0; i < animationData.num; i++) {
-    let char = characters[i] || {color: "#ffffff", speed: 2};
-    let offset = Math.sin(frame / (20/char.speed)) * 30;
-    drawStick(100 + i * 100 + offset, 200, char.color);
+function drawEnvironment(){
+  switch(animationData.env){
+    case"forest":ctx.fillStyle="#003300";break;
+    case"space":ctx.fillStyle="#000011";break;
+    default:ctx.fillStyle="#111111";
   }
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 }
 
-function playAnimation() {
-  if (!animationData) return;
-  frame = 0;
-  playing = true;
+function drawStick(x,y,color){
+  ctx.strokeStyle=color;
+  ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(x,y-30,10,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x,y-20);ctx.lineTo(x,y+20);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x-15,y-5);ctx.lineTo(x+15,y-5);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x,y+20);ctx.lineTo(x-15,y+40);
+  ctx.moveTo(x,y+20);ctx.lineTo(x+15,y+40);ctx.stroke();
+}
+
+function drawDialogue(text,x,y){
+  if(!text)return;
+  ctx.fillStyle="white";ctx.fillRect(x-40,y-80,120,30);
+  ctx.fillStyle="black";ctx.font="14px Arial";ctx.fillText(text,x-35,y-60);
+}
+
+function drawFrame(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawEnvironment();
+  let zoom=1;
+  if(animationData.effect==="cameraZoom") zoom=1+Math.sin(frame/30)*0.05;
+  ctx.save();ctx.scale(zoom,zoom);
+  for(let i=0;i<animationData.num;i++){
+    let char=characters[i]||{color:"#ffffff"};
+    let offset=Math.sin(frame/10+i)*30;
+    drawStick(100+i*80+offset,250,char.color);
+    drawDialogue(animationData.dialogue,100+i*80+offset,250);
+  }
+  ctx.restore();
+}
+
+function playAnimation(){
+  if(!animationData)return;
+  frame=0;playing=true;
   animate();
 }
 
-function animate() {
-  if (!playing) return;
+function stopAnimation(){playing=false;}
 
+function animate(){
+  if(!playing)return;
   drawFrame();
   frame++;
+  let delay=16;
+  if(animationData.effect==="slowMo")delay=60;
+  setTimeout(()=>{if(frame<300)requestAnimationFrame(animate);else playing=false;},delay);
+}
 
-  if (frame < 200) {
-    requestAnimationFrame(animate);
-  } else {
-    playing = false;
-  }
+function saveEpisode(){
+  if(!animationData)return;
+  let ep=JSON.parse(JSON.stringify(animationData));
+  episodes.push(ep);
+  renderPlaylist();
+}
+
+function renderPlaylist(){
+  const list=document.getElementById("playlist");
+  list.innerHTML="";
+  episodes.forEach((ep,i)=>{
+    let div=document.createElement("div");
+    div.className="playlist-episode";
+    let loadBtn=document.createElement("button");
+    loadBtn.innerText=(i+1)+": "+ep.type;
+    loadBtn.onclick=()=>{animationData=ep;drawFrame();};
+    let editBtn=document.createElement("button");
+    editBtn.innerText="Edit";
+    editBtn.onclick=()=>{alert("Editing "+ep.type+" - Customize in future");};
+    let delBtn=document.createElement("button");
+    delBtn.innerText="Delete";
+    delBtn.onclick=()=>{episodes.splice(i,1);renderPlaylist();};
+    let exportBtn=document.createElement("button");
+    exportBtn.innerText="Download";
+    exportBtn.onclick=()=>{alert("Simulated download for "+ep.type);}
+    div.appendChild(loadBtn);
+    div.appendChild(editBtn);
+    div.appendChild(delBtn);
+    div.appendChild(exportBtn);
+    list.appendChild(div);
+  });
+}
+
+function recordDialogue(){
+  if(!navigator.mediaDevices)return alert("Your browser does not support recording");
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    recorder=new MediaRecorder(stream);
+    audioChunks=[];
+    recorder.ondataavailable=e=>audioChunks.push(e.data);
+    recorder.onstop=()=>{
+      const blob=new Blob(audioChunks,{type:'audio/mp3'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url;a.download="dialogue.mp3";a.click();
+    }
+    recorder.start();
+    setTimeout(()=>recorder.stop(),5000);
+    alert("Recording for 5 seconds…");
+  }).catch(e=>alert("Permission denied"));
 }
 </script>
 
