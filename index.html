@@ -3,78 +3,198 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stickverse Studio - LEVEL 8 EPIC CINEMATIC MODE</title>
+<title>StickVerse Studio - GOD TIER</title>
 <style>
-body {margin:0; font-family: Arial, sans-serif; background:#000020; color:white; overflow:hidden;}
-header {text-align:center; padding:20px; font-size:2em; font-weight:bold; border-bottom:2px solid #fff;}
-.tabs {display:flex; justify-content:center; flex-wrap:wrap; margin:20px 0;}
-.tab {padding:10px 20px; margin:5px; background:#2a0055; cursor:pointer; border-radius:8px; transition:.3s;}
-.tab:hover{background:#7b1fa2;}
-.active-tab{background:#ff00ff;}
-.content {max-width:1400px; margin:auto; padding:20px; background:rgba(0,0,0,0.6); border-radius:12px;}
-.section{margin-bottom:30px;}
-input, select, button, textarea {margin:5px 0; padding:8px; border-radius:6px; border:none; width:100%;}
-.character-card {background: rgba(255,255,255,0.1); padding:15px; margin:10px 0; border-radius:10px;}
-.animation-area {height:350px; background: rgba(255,255,255,0.05); border:2px dashed #fff; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; white-space:pre-wrap; font-size:1.1em;}
-.dialogue-area {background: rgba(255,255,255,0.1); padding:10px; border-radius:8px; margin-top:10px; min-height:100px; white-space:pre-wrap; overflow-y:auto;}
-.final-boss {background:red; padding:20px; border-radius:12px; margin-top:20px; text-align:center; font-weight:bold; font-size:1.5em; position:relative;}
-.health-bar {height:25px; background:#222; border-radius:8px; overflow:hidden; margin-top:5px;}
-.health-bar-inner {height:100%; background:lime; width:100%; transition:width .3s;}
-.mana-bar-inner {height:100%; background:blue; width:100%; transition:width .3s;}
-.battle-arena {position:relative; height:500px; background:#111; border-radius:12px; overflow:hidden; margin-top:20px;}
-.stick-char {position:absolute; bottom:10px; width:40px; height:80px; background:#fff; border-radius:5px; display:flex; align-items:flex-end; justify-content:center; color:#000; font-size:12px; font-weight:bold;}
-.attack-effect {position:absolute; border-radius:50%; pointer-events:none; transition: all .3s;}
-.platform {position:absolute; background:#333; height:10px; border-radius:5px;}
+  body { margin:0; background: #4B0082; overflow:hidden; font-family: sans-serif; color:white; }
+  #gameCanvas { display:block; margin:0 auto; background: #4B0082; }
+  #ui { position:absolute; top:10px; left:10px; z-index:10; }
+  button { margin:5px; padding:8px; font-weight:bold; background:#6A0DAD; color:white; border:none; border-radius:5px; cursor:pointer;}
+  .characterCard { background: rgba(255,255,255,0.1); padding:5px; margin:5px; border-radius:5px; }
 </style>
 </head>
 <body>
-<header>Stickverse Studio - LEVEL 8 EPIC CINEMATIC MODE</header>
-<div class="tabs">
-  <div class="tab active-tab" onclick="openTab('characters')">Characters</div>
-  <div class="tab" onclick="openTab('powers')">Powers & Domains</div>
-  <div class="tab" onclick="openTab('animations')">Animations</div>
-  <div class="tab" onclick="openTab('dialogues')">Dialogue</div>
-  <div class="tab" onclick="openTab('finalboss')">Final Boss</div>
+<div id="ui">
+  <div>
+    <button onclick="createCharacter()">Create Character</button>
+    <button onclick="startBattle()">Start Battle</button>
+  </div>
+  <div id="characterList"></div>
 </div>
-<div class="content">
-  <div id="characters" class="tab-content">
-    <div class="section">
-      <h3>Create Character</h3>
-      <input type="text" id="charName" placeholder="Character Name">
-      <input type="text" id="charLook" placeholder="Looks / Appearance">
-      <button onclick="addCharacter()">Add Character</button>
-    </div>
-    <div class="section" id="charactersList"><h3>Character List</h3></div>
-  </div>
+<canvas id="gameCanvas" width="1200" height="600"></canvas>
 
-  <div id="powers" class="tab-content" style="display:none;">
-    <div class="section">
-      <h3>Select Power & Domain</h3>
-      <select id="selectCharacter"><option value="">Select Character</option></select>
-      <select id="selectPower"></select>
-      <select id="selectDomain"></select>
-      <textarea id="customDesc" placeholder="Add Description/Effect"></textarea>
-      <button onclick="assignPowerDomain()">Assign</button>
-    </div>
-    <div class="section" id="assignedList"><h3>Assigned Powers & Domains</h3></div>
-  </div>
+<script>
+// --- GAME SETUP ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-  <div id="animations" class="tab-content" style="display:none;">
-    <div class="section">
-      <h3>Create Animation</h3>
-      <select id="animationCharacter" multiple></select>
-      <textarea id="animationDesc" placeholder="Animation Description"></textarea>
-      <button onclick="generateAnimation()">Generate Animation</button>
-      <button onclick="smartSuggest()">AI Suggest Animation</button>
-    </div>
-    <div class="animation-area" id="animationArea">Animation Preview</div>
-  </div>
+let characters = [];
+let battlegrounds = ["KJ Arena", "Gojo Domain"];
+let currentBattlefield = 0;
+let powers = [];
+let domains = [];
 
-  <div id="dialogues" class="tab-content" style="display:none;">
-    <div class="section">
-      <h3>Record Dialogue (TTS Simulation)</h3>
-      <select id="dialogueCharacter"><option value="">Select Character</option></select>
-      <textarea id="dialogueText" placeholder="Type dialogue here"></textarea>
-      <button onclick="addDialogue()">Add Dialogue</button>
-      <button onclick="playDialogue()">Play Dialogue</button>
+// --- POWERS & DOMAINS (abbreviated example, add all 50) ---
+powers = [
+  {name:"Chrono-Absorption", effect:"rewind/accelerate time", animation:"clockRipple"},
+  {name:"Quantum Perception", effect:"see multiple outcomes", animation:"multiVision"},
+  {name:"Material Transmutation", effect:"change object properties", animation:"glowPattern"},
+  {name:"Tactile Teleportation", effect:"teleport to touched places", animation:"afterImage"},
+  {name:"Force of Will", effect:"manifest mental force", animation:"warpAir"}
+  // Add remaining 45 powers here
+];
+
+domains = [
+  {name:"Temporal Rift", power:"Chrono-Absorption", handMove:true},
+  {name:"Endless Possibilities", power:"Quantum Perception", handMove:true},
+  {name:"Alchemist's Lair", power:"Material Transmutation", handMove:true},
+  {name:"Touching Void", power:"Tactile Teleportation", handMove:true},
+  {name:"Unyielding Fortress", power:"Force of Will", handMove:true}
+  // Add remaining 45 domains here
+];
+
+// --- CHARACTER CREATION ---
+function createCharacter() {
+  const name = prompt("Enter Character Name:");
+  if(!name) return;
+
+  const color = prompt("Enter Color (name or hex):","#FFFFFF");
+  const char = {
+    name:name,
+    color:color,
+    power: powers[Math.floor(Math.random()*powers.length)],
+    domain: domains[Math.floor(Math.random()*domains.length)],
+    energy: 0,
+    x: Math.random()*canvas.width*0.8+50,
+    y: Math.random()*canvas.height*0.8+50,
+    size: 40,
+    fused:false
+  };
+  characters.push(char);
+  updateCharacterList();
+}
+
+// --- UI UPDATE ---
+function updateCharacterList() {
+  const div = document.getElementById('characterList');
+  div.innerHTML = "";
+  characters.forEach((c,i)=>{
+    div.innerHTML += `<div class="characterCard">#${i+1}: ${c.name} (${c.power.name})</div>`;
+  });
+}
+
+// --- BATTLE LOGIC ---
+let battleActive = false;
+function startBattle() {
+  if(characters.length<2) { alert("Add at least 2 characters!"); return; }
+  battleActive = true;
+  animate();
+}
+
+// --- SOUND PLACEHOLDER ---
+const sounds = {
+  ultimate: new Audio("https://www.soundjay.com/button/sounds/button-3.mp3"), // replace with your own
+  powerUse: new Audio("https://www.soundjay.com/button/sounds/button-16.mp3"),
+};
+
+// --- FUSION ---
+function fuseCharacters(c1,c2) {
+  const fusedChar = {
+    name:c1.name+"-"+c2.name,
+    color:"#FFD700",
+    power:c1.power,
+    domain:c2.domain,
+    energy: c1.energy+c2.energy,
+    x:(c1.x+c2.x)/2,
+    y:(c1.y+c2.y)/2,
+    size: c1.size+c2.size*0.5,
+    fused:true
+  };
+  characters.push(fusedChar);
+  characters = characters.filter(ch=>ch!==c1 && ch!==c2);
+  updateCharacterList();
+}
+
+// --- ANIMATION ---
+function animate() {
+  if(!battleActive) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Draw battleground
+  ctx.fillStyle="rgba(0,0,0,0.2)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="white";
+  ctx.font="20px sans-serif";
+  ctx.fillText("Battleground: "+battlegrounds[currentBattlefield],10,580);
+
+  // Draw characters
+  characters.forEach(c=>{
+    ctx.fillStyle=c.color;
+    ctx.beginPath();
+    ctx.arc(c.x,c.y,c.size,0,Math.PI*2);
+    ctx.fill();
+
+    // Draw energy bar above
+    ctx.strokeStyle="yellow";
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.arc(c.x,c.y- c.size -10, c.size*0.5, 0, Math.PI*2*c.energy/100);
+    ctx.stroke();
+  });
+
+  // Random AI moves
+  characters.forEach(c=>{
+    c.x += Math.random()*4-2;
+    c.y += Math.random()*4-2;
+    c.energy = Math.min(c.energy+0.1,100);
+
+    if(c.energy>=100){
+      useUltimate(c);
+      c.energy = 0;
+    }
+  });
+
+  requestAnimationFrame(animate);
+}
+
+// --- ULTIMATE ATTACK ---
+function useUltimate(c) {
+  // Play sound
+  sounds.ultimate.play();
+
+  // Slow motion + zoom
+  let originalScale = ctx.getTransform().a;
+  ctx.save();
+  ctx.scale(2,2);
+  ctx.fillStyle=c.color;
+  ctx.beginPath();
+  ctx.arc(c.x/2,c.y/2,c.size*1.5,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+  setTimeout(()=>{},500);
+
+  // Environmental effect placeholder
+  ctx.fillStyle="rgba(255,255,255,0.1)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+// --- DOMAIN CLASHES ---
+function domainClash(c1,c2) {
+  if(c1.domain.handMove && c2.domain.handMove){
+    // simple visual clash
+    ctx.strokeStyle="cyan";
+    ctx.beginPath();
+    ctx.moveTo(c1.x,c1.y);
+    ctx.lineTo(c2.x,c2.y);
+    ctx.stroke();
+  }
+}
+
+// --- ADDITIONAL GAME FUNCTIONS ---
+// 1. Add more powers/domains in the arrays
+// 2. Add sound URLs for each effect
+// 3. Add fusion triggers (example: click two characterCards to fuse)
+// 4. Expand battleground list and effects
+
+</script>
+</body>
 </html>
